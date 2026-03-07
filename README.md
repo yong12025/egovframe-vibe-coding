@@ -379,7 +379,6 @@ egovframe-vibe-coding/
 ├─ CONTRIBUTING.md
 ├─ CODE_OF_CONDUCT.md
 ├─ SECURITY.md
-├─ ROADMAP.md
 ├─ LICENSE
 ├─ docs/
 │  ├─ agent-rules.md
