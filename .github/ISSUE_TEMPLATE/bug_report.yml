@@ -1,0 +1,65 @@
+name: Bug report
+description: 문제 재현 가능한 버그 제보
+title: "[BUG] "
+labels:
+  - bug
+body:
+  - type: dropdown
+    id: version_lane
+    attributes:
+      label: 버전 라인
+      description: 문제가 발생한 버전 라인을 선택해 주세요.
+      options:
+        - v4.3
+        - v5.0 beta
+        - 확인 필요
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: 문제 요약
+      description: 어떤 문제가 발생했는지 간단히 작성해 주세요.
+      placeholder: 로그인 API 호출 시 500 오류 발생
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 단계
+      description: 순서대로 작성해 주세요.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대 결과
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 결과
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: 검증 명령/로그
+      description: 실행한 명령, 오류 로그, 스택트레이스를 포함해 주세요.
+      placeholder: |
+        ./tools/migration-lane-check.sh . v5.0-beta /tmp/migration-check.md
+        (오류 로그 붙여넣기)
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 환경 정보
+      description: JDK, DB, OS, 빌드도구 등을 작성해 주세요.
+    validations:
+      required: true

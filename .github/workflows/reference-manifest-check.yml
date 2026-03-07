@@ -1,0 +1,21 @@
+name: Reference Manifest Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate reference repository manifest
+        run: |
+          ./tools/reference-repo-manifest-check.sh references/repos.manifest.yml /tmp/reference-repo-manifest-report.md
+      - name: Upload manifest report
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-repo-manifest-report
+          path: /tmp/reference-repo-manifest-report.md

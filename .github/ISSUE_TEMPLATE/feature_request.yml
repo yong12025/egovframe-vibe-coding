@@ -1,0 +1,64 @@
+name: Feature request
+description: 기능 제안 또는 개선 요청
+title: "[FEATURE] "
+labels:
+  - enhancement
+body:
+  - type: dropdown
+    id: version_lane
+    attributes:
+      label: 대상 버전 라인
+      options:
+        - v4.3
+        - v5.0 beta
+        - 공통
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 해결하려는 문제
+      description: 어떤 불편을 해결하고 싶은지 작성해 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안 내용
+      description: 원하는 기능/문서 구조를 작성해 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: done_criteria
+    attributes:
+      label: 완료 기준
+      description: 완료되었다고 판단할 수 있는 검증 가능한 조건을 작성해 주세요.
+      placeholder: |
+        1. 문서 2개 추가
+        2. 예시 1개 추가
+        3. 링크 체크 CI 통과
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 영역
+      options:
+        - docs
+        - prompts
+        - agent-rules
+        - github-templates
+        - examples
+        - tools
+    validations:
+      required: true
+  - type: input
+    id: impact
+    attributes:
+      label: 기대 효과
+      placeholder: 신규 사용자가 10분 내 첫 실행 가능
+  - type: textarea
+    id: constraints
+    attributes:
+      label: 제약/주의사항
+      description: 이번 변경에서 지켜야 할 제약이 있으면 작성해 주세요.

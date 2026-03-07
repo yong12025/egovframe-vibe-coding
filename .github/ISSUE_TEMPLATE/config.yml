@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/eGovFramework/egovframe-docs
+    about: 보안 이슈는 SECURITY.md 정책을 참고해 비공개 채널로 제보해 주세요.

@@ -1,0 +1,25 @@
+version: 1
+updated_at: 2026-03-07
+owner: <ORG_OR_USER>
+default_branch: main
+
+lane_repos:
+  - lane: v4.3
+    status: planned
+    repo_name: egovframe-reference-v4.3
+    repo_url: https://github.com/<ORG_OR_USER>/egovframe-reference-v4.3
+    convention_profile: egov-legacy-safe
+    scenarios:
+      - template-portal
+      - batch-processing
+      - legacy-modernization
+
+  - lane: v5.0-beta
+    status: planned
+    repo_name: egovframe-reference-v5.0-beta
+    repo_url: https://github.com/<ORG_OR_USER>/egovframe-reference-v5.0-beta
+    convention_profile: egov-fullstack-modern
+    scenarios:
+      - boot-service
+      - msa-domain-split
+      - ai-rag-assistant

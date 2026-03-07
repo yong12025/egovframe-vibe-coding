@@ -1,0 +1,35 @@
+name: Standard Readiness
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax check
+        run: |
+          for f in tools/*.sh; do
+            bash -n "$f"
+          done
+      - name: Run standard readiness check
+        run: |
+          ./tools/standard-readiness-check.sh . /tmp/standard-readiness-report.md
+      - name: Build readiness dashboard artifacts
+        run: |
+          ./tools/standard-readiness-dashboard.sh \
+            /tmp/standard-readiness-report.md \
+            /tmp/standard-readiness-summary.md \
+            /tmp/standard-readiness-badge.json
+      - name: Upload readiness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: standard-readiness-artifacts
+          path: |
+            /tmp/standard-readiness-report.md
+            /tmp/standard-readiness-summary.md
+            /tmp/standard-readiness-badge.json

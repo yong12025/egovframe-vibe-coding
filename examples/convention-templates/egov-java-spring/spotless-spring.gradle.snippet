@@ -1,0 +1,11 @@
+plugins {
+  id 'com.diffplug.spotless' version '6.25.0'
+}
+
+spotless {
+  java {
+    eclipse().configFile('eclipse-formatter.xml')
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+}

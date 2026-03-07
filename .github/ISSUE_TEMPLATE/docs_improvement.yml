@@ -1,0 +1,47 @@
+name: Docs improvement
+description: 문서 개선 제안
+title: "[DOCS] "
+labels:
+  - documentation
+body:
+  - type: dropdown
+    id: user_type
+    attributes:
+      label: 사용자 유형
+      options:
+        - 신규 사용자
+        - 기존 사용자
+        - 운영/배포 담당
+    validations:
+      required: true
+  - type: input
+    id: file
+    attributes:
+      label: 대상 파일
+      placeholder: docs/03-quick-start.md
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: 현재 문제
+      description: 현재 문서를 따라가며 어디서 막히는지 단계로 작성해 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: 개선 제안
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: 참고 링크
+      description: 공식 문서 또는 사례 링크
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 수용 기준
+      description: 수정 후 어떤 상태가 되면 해결인지 작성해 주세요.
+      placeholder: 문서만 보고 10분 내 첫 실행 가능

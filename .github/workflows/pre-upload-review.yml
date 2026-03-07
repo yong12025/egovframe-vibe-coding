@@ -1,0 +1,21 @@
+name: Pre-upload Full Review
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  full-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run pre-upload full review
+        run: |
+          ./tools/pre-upload-full-review.sh . /tmp/pre-upload-review-report.md
+      - name: Upload pre-upload review report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-upload-review-report
+          path: /tmp/pre-upload-review-report.md
