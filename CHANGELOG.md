@@ -27,6 +27,11 @@
 - `nttId=1932` 공지 링크를 안정 URL(`menuNo=66`) 기준으로 정리
 - README/Quick Start의 clone URL placeholder를 `<GUIDE_REPO_URL>` 패턴으로 통일
 - Quick Start에 업로드 전 전체 검토 단계(`tools/pre-upload-full-review.sh`) 추가
+- README 온보딩 명령을 TARGET_PROJECT_DIR 부모(형제 경로) 기준으로 정렬하고, 가이드 저장소는 미존재 시에만 clone 하도록 수정
+- README PowerShell 온보딩 예시에서 TARGET_PARENT_DIR를 현재 위치 기준으로 계산하도록 수정해 null 경로 오류를 방지
+- README Windows 예시에서 bash 출력 파일을 PowerShell 경로가 아닌 bash 컨텍스트에서 읽도록 수정하고, bookPod 기준 현재 위치 흐름으로 정렬
+- README PowerShell 예시에 bash 전달용 경로(`C:/...`) 변환을 추가해 bookPod 기준 복붙 실행이 가능하도록 수정
+- README에 버전 레인 의미 설명과 에이전트 요청 예시를 추가해 초보 사용자 온보딩을 보강
 
 ## [2026-03-07]
 

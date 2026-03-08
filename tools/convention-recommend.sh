@@ -1,6 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+normalize_path() {
+  local input="$1"
+  if [[ "$input" =~ ^[A-Za-z]:[\\/] ]]; then
+    if command -v wslpath >/dev/null 2>&1; then
+      wslpath -u "$input"
+      return
+    fi
+    if command -v cygpath >/dev/null 2>&1; then
+      cygpath -u "$input"
+      return
+    fi
+    local drive="${input:0:1}"
+    local rest="${input:2}"
+    rest="${rest//\\//}"
+    printf '/mnt/%s%s\n' "$(printf '%s' "$drive" | tr '[:upper:]' '[:lower:]')" "$rest"
+    return
+  fi
+  printf '%s\n' "$input"
+}
+
+resolve_rg() {
+  local candidate
+  candidate="$(command -v rg 2>/dev/null || true)"
+  if [[ -n "$candidate" ]] && "$candidate" --version >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+  return 1
+}
+
 usage() {
   cat <<'USAGE'
 Usage:
@@ -13,7 +43,7 @@ if [[ $# -lt 5 ]]; then
   exit 1
 fi
 
-PROJECT_DIR="$1"
+PROJECT_DIR="$(normalize_path "$1")"
 shift
 
 LANE=""
@@ -31,7 +61,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --output)
-      OUTPUT="${2:-}"
+      OUTPUT="$(normalize_path "${2:-}")"
       shift 2
       ;;
     *)
@@ -58,8 +88,42 @@ if [[ "$MODE" != "auto" && "$MODE" != "existing" && "$MODE" != "greenfield" ]]; 
 fi
 
 count_files() {
+  local globs=()
   local result
-  result="$(rg --files "$@" "$PROJECT_DIR" 2>/dev/null | wc -l | awk '{print $1}' || true)"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -g)
+        globs+=("${2:-}")
+        shift 2
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+  if [[ -n "${RG_BIN:-}" ]]; then
+    local rg_args=()
+    local glob
+    for glob in "${globs[@]}"; do
+      rg_args+=(-g "$glob")
+    done
+    result="$("$RG_BIN" --files "${rg_args[@]}" "$PROJECT_DIR" 2>/dev/null | wc -l | awk '{print $1}' || true)"
+    echo "${result:-0}"
+    return
+  fi
+  local find_args=()
+  local i
+  if [[ ${#globs[@]} -gt 0 ]]; then
+    find_args+=("(")
+    for (( i=0; i<${#globs[@]}; i++ )); do
+      if (( i > 0 )); then
+        find_args+=(-o)
+      fi
+      find_args+=(-name "${globs[$i]}")
+    done
+    find_args+=(")")
+  fi
+  result="$(find "$PROJECT_DIR" -type f "${find_args[@]}" 2>/dev/null | wc -l | awk '{print $1}' || true)"
   echo "${result:-0}"
 }
 
@@ -70,12 +134,45 @@ exists_file() {
 has_pattern() {
   local pattern="$1"
   shift
-  if rg -n "$@" "$pattern" "$PROJECT_DIR" >/dev/null 2>&1; then
+  local globs=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --glob)
+        globs+=("${2:-}")
+        shift 2
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+  if [[ -n "${RG_BIN:-}" ]]; then
+    local rg_args=()
+    local glob
+    for glob in "${globs[@]}"; do
+      rg_args+=(--glob "$glob")
+    done
+    if "$RG_BIN" -n "${rg_args[@]}" "$pattern" "$PROJECT_DIR" >/dev/null 2>&1; then
+      echo 1
+    else
+      echo 0
+    fi
+    return
+  fi
+  local grep_args=(-RInE)
+  local glob
+  for glob in "${globs[@]}"; do
+    grep_args+=("--include=$glob")
+  done
+  grep_args+=("$pattern" "$PROJECT_DIR")
+  if grep "${grep_args[@]}" >/dev/null 2>&1; then
     echo 1
   else
     echo 0
   fi
 }
+
+RG_BIN="$(resolve_rg || true)"
 
 java_files="$(count_files -g '*.java')"
 js_ts_files="$(count_files -g '*.js' -g '*.jsx' -g '*.ts' -g '*.tsx')"
