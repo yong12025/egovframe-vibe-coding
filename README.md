@@ -91,16 +91,16 @@ macOS/Linux
 
 ```bash
 GUIDE_REPO_URL=<GUIDE_REPO_URL>
-# 예시 HTTPS: GUIDE_REPO_URL=https://github.com/your-org/egovframe-vibe-coding.git
-# 예시 SSH: GUIDE_REPO_URL=git@github.com:your-org/egovframe-vibe-coding.git
+# 예시 HTTPS: GUIDE_REPO_URL=https://github.com/yong12025/egovframe-vibe-coding.git
+# 예시 SSH: GUIDE_REPO_URL=git@github.com:yong12025/egovframe-vibe-coding.git
 ```
 
 Windows PowerShell
 
 ```powershell
 $GUIDE_REPO_URL = "<GUIDE_REPO_URL>"
-# 예시 HTTPS: $GUIDE_REPO_URL = "https://github.com/your-org/egovframe-vibe-coding.git"
-# 예시 SSH: $GUIDE_REPO_URL = "git@github.com:your-org/egovframe-vibe-coding.git"
+# 예시 HTTPS: $GUIDE_REPO_URL = "https://github.com/yong12025/egovframe-vibe-coding.git"
+# 예시 SSH: $GUIDE_REPO_URL = "git@github.com:yong12025/egovframe-vibe-coding.git"
 ```
 
 Step 1. home 경로로 이동 후 가이드 저장소 클론
@@ -227,16 +227,16 @@ macOS/Linux
 
 ```bash
 GUIDE_REPO_URL=<GUIDE_REPO_URL>
-# 예시 HTTPS: GUIDE_REPO_URL=https://github.com/your-org/egovframe-vibe-coding.git
-# 예시 SSH: GUIDE_REPO_URL=git@github.com:your-org/egovframe-vibe-coding.git
+# 예시 HTTPS: GUIDE_REPO_URL=https://github.com/yong12025/egovframe-vibe-coding.git
+# 예시 SSH: GUIDE_REPO_URL=git@github.com:yong12025/egovframe-vibe-coding.git
 ```
 
 Windows PowerShell
 
 ```powershell
 $GUIDE_REPO_URL = "<GUIDE_REPO_URL>"
-# 예시 HTTPS: $GUIDE_REPO_URL = "https://github.com/your-org/egovframe-vibe-coding.git"
-# 예시 SSH: $GUIDE_REPO_URL = "git@github.com:your-org/egovframe-vibe-coding.git"
+# 예시 HTTPS: $GUIDE_REPO_URL = "https://github.com/yong12025/egovframe-vibe-coding.git"
+# 예시 SSH: $GUIDE_REPO_URL = "git@github.com:yong12025/egovframe-vibe-coding.git"
 ```
 
 Step 1. home 경로로 이동 후 가이드 저장소 클론
