@@ -62,6 +62,14 @@
 3. PowerShell 사용 시 `bash` 실행 환경(WSL 또는 Git Bash) 권장
 4. 프로젝트 버전 라인(v4.3 또는 v5.0 beta) 결정
 
+빠른 설명
+
+- `v4.3`: 기존 전자정부프레임워크 레거시 프로젝트 유지/보수에 가까운 선택
+- `v5.0 beta`: Spring Boot 3.x, Spring 6.x 기준의 신규 구축 또는 현대화 프로젝트 선택
+- 잘 모르겠다면: 기존에 이미 운영 중인 프로젝트면 보통 `v4.3` 가능성을 먼저 보고, 신규 구축 또는 Boot 3 계열이면 `v5.0 beta`를 먼저 봅니다
+- 상세 기준: `docs/01-version-lane.md`
+
+
 주의
 
 - 이 문서의 `<GUIDE_REPO_URL>`은 placeholder입니다.
@@ -103,37 +111,47 @@ $GUIDE_REPO_URL = "<GUIDE_REPO_URL>"
 # 예시 SSH: $GUIDE_REPO_URL = "git@github.com:yong12025/egovframe-vibe-coding.git"
 ```
 
-Step 1. home 경로로 이동 후 가이드 저장소 클론
+Step 1. TARGET_PROJECT_DIR 기준으로 sibling 경로를 계산하고 가이드 저장소 준비
 
 macOS/Linux
 
 ```bash
-cd ~
-git clone "$GUIDE_REPO_URL"
+# 현재 위치가 기존 프로젝트(bookPod 등) 루트라고 가정
+TARGET_PROJECT_DIR="$(pwd)"
+TARGET_PARENT_DIR="$(cd .. && pwd)"
+GUIDE_DIR="$TARGET_PARENT_DIR/egovframe-vibe-coding"
+if [ ! -d "$GUIDE_DIR/.git" ]; then
+  mkdir -p "$TARGET_PARENT_DIR"
+  git clone "$GUIDE_REPO_URL" "$GUIDE_DIR"
+fi
 ```
 
 Windows PowerShell
 
 ```powershell
-Set-Location $HOME
-git clone $GUIDE_REPO_URL
+# 현재 위치가 기존 프로젝트(bookPod 등) 루트라고 가정
+$TARGET_PROJECT_DIR = (Get-Location).Path
+$TARGET_PARENT_DIR = Split-Path -Parent $TARGET_PROJECT_DIR
+$GUIDE_DIR = Join-Path $TARGET_PARENT_DIR "egovframe-vibe-coding"
+$TARGET_PROJECT_DIR_BASH = $TARGET_PROJECT_DIR -replace '\\', '/'
+$GUIDE_DIR_BASH = $GUIDE_DIR -replace '\\', '/'
+if (-not (Test-Path (Join-Path $GUIDE_DIR ".git"))) {
+  New-Item -ItemType Directory -Force -Path $TARGET_PARENT_DIR | Out-Null
+  git clone $GUIDE_REPO_URL $GUIDE_DIR
+}
 ```
 
-Step 2. 가이드/대상 프로젝트 경로 변수 선언
+Step 2. GUIDE_DIR로 이동
 
 macOS/Linux
 
 ```bash
-GUIDE_DIR=~/egovframe-vibe-coding
-TARGET_PROJECT_DIR=~/workspace/my-egov-project
 cd "$GUIDE_DIR"
 ```
 
 Windows PowerShell
 
 ```powershell
-$GUIDE_DIR = Join-Path $HOME "egovframe-vibe-coding"
-$TARGET_PROJECT_DIR = "C:\\workspace\\my-egov-project"
 Set-Location $GUIDE_DIR
 ```
 
@@ -149,14 +167,53 @@ cat /tmp/convention-recommend-report.md
 Windows PowerShell
 
 ```powershell
-bash ./tools/convention-recommend.sh "$TARGET_PROJECT_DIR" --lane v5.0-beta --mode auto --output /tmp/convention-recommend-report.md
-Get-Content /tmp/convention-recommend-report.md
+bash ./tools/convention-recommend.sh "$TARGET_PROJECT_DIR_BASH" --lane v5.0-beta --mode auto --output /tmp/convention-recommend-report.md
+bash -lc "cat /tmp/convention-recommend-report.md"
 ```
 
 Step 4. 단일 지시문으로 에이전트 실행
 
 - 엔트리포인트: `prompts/tool-profiles/unified-agent-instruction.md`
 - 규약 기준: `docs/agent-rules.md`
+
+
+에이전트 요청 예시
+
+```text
+현재 프로젝트를 eGovFrame 기준으로 먼저 분석해줘.
+1. 버전 레인부터 잠가줘 (`v4.3` 또는 `v5.0 beta`)
+2. 컨벤션 프로파일 추천해줘
+3. 기존 공통 컴포넌트 재사용 가능성부터 점검해줘
+4. 요청 범위 밖 변경 없이, 기존 API/DB/배치 동작 보존 우선으로 진행해줘
+5. 결과는 다음 형식으로 정리해줘:
+   - Summary
+   - selected_profile / confidence_score
+   - top_reasons / alternatives
+   - migration_cost / next_actions
+   - Changed files
+   - Code/config
+   - Run/verify commands
+   - Risks and assumptions
+   - Done checklist
+```
+
+기능 작업까지 같이 요청하는 예시
+
+```text
+현재 프로젝트를 eGovFrame 기준으로 분석하고, [원하는 기능] 작업을 준비해줘.
+
+반드시 아래 순서로 진행:
+1. 버전 레인 잠금
+2. 컨벤션 프로파일 추천
+3. 공통 컴포넌트 재사용 가능성 점검
+4. 영향도 보고
+5. 최소 변경안 제시
+
+주의:
+- 요청 범위 밖 변경 금지
+- 기존 API/DB/배치 동작 보존 우선
+- 먼저 코드 생성하지 말고 분석/계획부터
+```
 
 Step 5. 산출물 계약 확인
 
@@ -181,8 +238,8 @@ cat /tmp/standard-readiness-report.md
 Windows PowerShell
 
 ```powershell
-bash ./tools/standard-readiness-check.sh "$GUIDE_DIR" /tmp/standard-readiness-report.md
-Get-Content /tmp/standard-readiness-report.md
+bash ./tools/standard-readiness-check.sh "$GUIDE_DIR_BASH" /tmp/standard-readiness-report.md
+bash -lc "cat /tmp/standard-readiness-report.md"
 ```
 
 Step 7. 준비도 요약/배지 생성(권장)
@@ -198,7 +255,7 @@ Windows PowerShell
 
 ```powershell
 bash ./tools/standard-readiness-dashboard.sh /tmp/standard-readiness-report.md /tmp/standard-readiness-summary.md /tmp/standard-readiness-badge.json
-Get-Content /tmp/standard-readiness-summary.md
+bash -lc "cat /tmp/standard-readiness-summary.md"
 ```
 
 Step 8. lane 분리 매니페스트 점검(운영자 권장)
@@ -214,7 +271,7 @@ Windows PowerShell
 
 ```powershell
 bash ./tools/reference-repo-manifest-check.sh references/repos.manifest.yml /tmp/reference-repo-manifest-report.md
-Get-Content /tmp/reference-repo-manifest-report.md
+bash -lc "cat /tmp/reference-repo-manifest-report.md"
 ```
 
 <a id="beginner-flow"></a>
@@ -239,39 +296,47 @@ $GUIDE_REPO_URL = "<GUIDE_REPO_URL>"
 # 예시 SSH: $GUIDE_REPO_URL = "git@github.com:yong12025/egovframe-vibe-coding.git"
 ```
 
-Step 1. home 경로로 이동 후 가이드 저장소 클론
+Step 1. TARGET_PROJECT_DIR 기준으로 sibling 경로를 계산하고 가이드 저장소 준비
 
 macOS/Linux
 
 ```bash
-cd ~
-git clone "$GUIDE_REPO_URL"
+# 현재 위치가 기존 프로젝트(bookPod 등) 루트라고 가정
+TARGET_PARENT_DIR="$(cd .. && pwd)"
+TARGET_PROJECT_DIR="$TARGET_PARENT_DIR/new-egov-service"
+mkdir -p "$TARGET_PROJECT_DIR"
+GUIDE_DIR="$TARGET_PARENT_DIR/egovframe-vibe-coding"
+if [ ! -d "$GUIDE_DIR/.git" ]; then
+  git clone "$GUIDE_REPO_URL" "$GUIDE_DIR"
+fi
 ```
 
 Windows PowerShell
 
 ```powershell
-Set-Location $HOME
-git clone $GUIDE_REPO_URL
+# 현재 위치가 기존 프로젝트(bookPod 등) 루트라고 가정
+$TARGET_PARENT_DIR = Split-Path -Parent (Get-Location).Path
+$TARGET_PROJECT_DIR = Join-Path $TARGET_PARENT_DIR "new-egov-service"
+New-Item -ItemType Directory -Force -Path $TARGET_PROJECT_DIR | Out-Null
+$GUIDE_DIR = Join-Path $TARGET_PARENT_DIR "egovframe-vibe-coding"
+$TARGET_PROJECT_DIR_BASH = $TARGET_PROJECT_DIR -replace '\\', '/'
+$GUIDE_DIR_BASH = $GUIDE_DIR -replace '\\', '/'
+if (-not (Test-Path (Join-Path $GUIDE_DIR ".git"))) {
+  git clone $GUIDE_REPO_URL $GUIDE_DIR
+}
 ```
 
-Step 2. 가이드/신규 프로젝트 경로 선언
+Step 2. GUIDE_DIR로 이동
 
 macOS/Linux
 
 ```bash
-GUIDE_DIR=~/egovframe-vibe-coding
-TARGET_PROJECT_DIR=~/workspace/new-egov-service
-mkdir -p "$TARGET_PROJECT_DIR"
 cd "$GUIDE_DIR"
 ```
 
 Windows PowerShell
 
 ```powershell
-$GUIDE_DIR = Join-Path $HOME "egovframe-vibe-coding"
-$TARGET_PROJECT_DIR = "C:\\workspace\\new-egov-service"
-New-Item -ItemType Directory -Force -Path $TARGET_PROJECT_DIR | Out-Null
 Set-Location $GUIDE_DIR
 ```
 
@@ -287,8 +352,8 @@ cat /tmp/convention-recommend-report.md
 Windows PowerShell
 
 ```powershell
-bash ./tools/convention-recommend.sh "$TARGET_PROJECT_DIR" --lane v5.0-beta --mode greenfield --output /tmp/convention-recommend-report.md
-Get-Content /tmp/convention-recommend-report.md
+bash ./tools/convention-recommend.sh "$TARGET_PROJECT_DIR_BASH" --lane v5.0-beta --mode greenfield --output /tmp/convention-recommend-report.md
+bash -lc "cat /tmp/convention-recommend-report.md"
 ```
 
 Step 4. 템플릿/프롬프트 순서 적용
@@ -306,16 +371,22 @@ macOS/Linux
 
 ```bash
 pwd
+echo "TARGET_PARENT_DIR=$TARGET_PARENT_DIR"
+ls -la "$TARGET_PARENT_DIR"
 ls -la "$GUIDE_DIR"
 ls -la "$TARGET_PROJECT_DIR"
+[ "$(dirname "$GUIDE_DIR")" = "$(dirname "$TARGET_PROJECT_DIR")" ] && echo "Sibling layout OK"
 ```
 
 Windows PowerShell
 
 ```powershell
 Get-Location
+"TARGET_PARENT_DIR=$TARGET_PARENT_DIR"
+Get-ChildItem $TARGET_PARENT_DIR
 Get-ChildItem $GUIDE_DIR
 Get-ChildItem $TARGET_PROJECT_DIR
+if ((Split-Path -Parent $GUIDE_DIR) -eq (Split-Path -Parent $TARGET_PROJECT_DIR)) { "Sibling layout OK" } else { "Sibling layout mismatch" }
 ```
 
 ---

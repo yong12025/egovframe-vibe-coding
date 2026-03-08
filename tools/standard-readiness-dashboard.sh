@@ -1,26 +1,58 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+normalize_path() {
+  local input="$1"
+  if [[ "$input" =~ ^[A-Za-z]:[\\/] ]]; then
+    if command -v wslpath >/dev/null 2>&1; then
+      wslpath -u "$input"
+      return
+    fi
+    if command -v cygpath >/dev/null 2>&1; then
+      cygpath -u "$input"
+      return
+    fi
+    local drive="${input:0:1}"
+    local rest="${input:2}"
+    rest="${rest//\\//}"
+    printf '/mnt/%s%s\n' "$(printf '%s' "$drive" | tr '[:upper:]' '[:lower:]')" "$rest"
+    return
+  fi
+  printf '%s\n' "$input"
+}
+
+resolve_rg() {
+  local candidate
+  candidate="$(command -v rg 2>/dev/null || true)"
+  if [[ -n "$candidate" ]] && "$candidate" --version >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+  return 1
+}
+
 if [[ $# -lt 1 ]]; then
   echo "Usage: ./tools/standard-readiness-dashboard.sh <READINESS_REPORT_MD> [OUTPUT_SUMMARY_MD] [OUTPUT_BADGE_JSON]" >&2
   exit 1
 fi
 
-READINESS_REPORT_MD="$1"
-OUTPUT_SUMMARY_MD="${2:-/tmp/standard-readiness-summary.md}"
-OUTPUT_BADGE_JSON="${3:-/tmp/standard-readiness-badge.json}"
+READINESS_REPORT_MD="$(normalize_path "$1")"
+OUTPUT_SUMMARY_MD="$(normalize_path "${2:-/tmp/standard-readiness-summary.md}")"
+OUTPUT_BADGE_JSON="$(normalize_path "${3:-/tmp/standard-readiness-badge.json}")"
 
 if [[ ! -f "$READINESS_REPORT_MD" ]]; then
   echo "[ERROR] READINESS_REPORT_MD not found: $READINESS_REPORT_MD" >&2
   exit 1
 fi
 
+RG_BIN="$(resolve_rg || true)"
+
 extract_first_value() {
   local pattern="$1"
   local file="$2"
   local result
-  if command -v rg >/dev/null 2>&1; then
-    result="$(rg -n "$pattern" "$file" | head -n1 || true)"
+  if [[ -n "${RG_BIN:-}" ]]; then
+    result="$("$RG_BIN" -n "$pattern" "$file" | head -n1 || true)"
   else
     result="$(grep -nE "$pattern" "$file" | head -n1 || true)"
   fi

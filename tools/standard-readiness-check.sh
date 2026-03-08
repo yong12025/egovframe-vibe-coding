@@ -1,18 +1,60 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+normalize_path() {
+  local input="$1"
+  if [[ "$input" =~ ^[A-Za-z]:[\\/] ]]; then
+    if command -v wslpath >/dev/null 2>&1; then
+      wslpath -u "$input"
+      return
+    fi
+    if command -v cygpath >/dev/null 2>&1; then
+      cygpath -u "$input"
+      return
+    fi
+    local drive="${input:0:1}"
+    local rest="${input:2}"
+    rest="${rest//\\//}"
+    printf '/mnt/%s%s\n' "$(printf '%s' "$drive" | tr '[:upper:]' '[:lower:]')" "$rest"
+    return
+  fi
+  printf '%s\n' "$input"
+}
+
+resolve_rg() {
+  local candidate
+  candidate="$(command -v rg 2>/dev/null || true)"
+  if [[ -n "$candidate" ]] && "$candidate" --version >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+  return 1
+}
+
 if [[ $# -lt 1 ]]; then
   echo "Usage: ./tools/standard-readiness-check.sh <REPO_DIR> [OUTPUT_MD]" >&2
   exit 1
 fi
 
-REPO_DIR="$1"
-OUTPUT_MD="${2:-/tmp/standard-readiness-report.md}"
+REPO_DIR="$(normalize_path "$1")"
+OUTPUT_MD="$(normalize_path "${2:-/tmp/standard-readiness-report.md}")"
 
 if [[ ! -d "$REPO_DIR" ]]; then
   echo "[ERROR] REPO_DIR not found: $REPO_DIR" >&2
   exit 1
 fi
+
+RG_BIN="$(resolve_rg || true)"
+
+extract_report_value() {
+  local key="$1"
+  local file="$2"
+  if [[ -n "${RG_BIN:-}" ]]; then
+    "$RG_BIN" -n "$key" "$file" | head -n1 | sed -E 's/.*`([^`]*)`.*/\1/' || true
+  else
+    grep -En "$key" "$file" | head -n1 | sed -E 's/.*`([^`]*)`.*/\1/' || true
+  fi
+}
 
 required_files=(
   "README.md"
@@ -66,8 +108,8 @@ done
 smoke_output="/tmp/standard-readiness-convention.md"
 smoke_status="PASS"
 smoke_note=""
-if [[ -x "$REPO_DIR/tools/convention-recommend.sh" ]]; then
-  if ! "$REPO_DIR/tools/convention-recommend.sh" "$REPO_DIR" --lane v5.0-beta --mode auto --output "$smoke_output" >/tmp/standard-readiness-smoke.log 2>&1; then
+if [[ -f "$REPO_DIR/tools/convention-recommend.sh" ]]; then
+  if ! bash "$REPO_DIR/tools/convention-recommend.sh" "$REPO_DIR" --lane v5.0-beta --mode auto --output "$smoke_output" >/tmp/standard-readiness-smoke.log 2>&1; then
     smoke_status="FAIL"
     smoke_note="convention-recommend execution failed"
   fi
@@ -79,8 +121,8 @@ fi
 selected_profile="N/A"
 confidence_score="N/A"
 if [[ -f "$smoke_output" ]]; then
-  selected_profile="$(rg -n "selected_profile" "$smoke_output" | head -n1 | sed -E 's/.*`([^`]*)`.*/\1/' || true)"
-  confidence_score="$(rg -n "confidence_score" "$smoke_output" | head -n1 | sed -E 's/.*`([^`]*)`.*/\1/' || true)"
+  selected_profile="$(extract_report_value "selected_profile" "$smoke_output")"
+  confidence_score="$(extract_report_value "confidence_score" "$smoke_output")"
   selected_profile="${selected_profile:-N/A}"
   confidence_score="${confidence_score:-N/A}"
 fi

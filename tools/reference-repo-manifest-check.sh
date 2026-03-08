@@ -1,13 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+normalize_path() {
+  local input="$1"
+  if [[ "$input" =~ ^[A-Za-z]:[\\/] ]]; then
+    if command -v wslpath >/dev/null 2>&1; then
+      wslpath -u "$input"
+      return
+    fi
+    if command -v cygpath >/dev/null 2>&1; then
+      cygpath -u "$input"
+      return
+    fi
+    local drive="${input:0:1}"
+    local rest="${input:2}"
+    rest="${rest//\\//}"
+    printf '/mnt/%s%s\n' "$(printf '%s' "$drive" | tr '[:upper:]' '[:lower:]')" "$rest"
+    return
+  fi
+  printf '%s\n' "$input"
+}
+
+resolve_rg() {
+  local candidate
+  candidate="$(command -v rg 2>/dev/null || true)"
+  if [[ -n "$candidate" ]] && "$candidate" --version >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+  return 1
+}
+
 if [[ $# -lt 1 ]]; then
   echo "Usage: ./tools/reference-repo-manifest-check.sh <MANIFEST_YML> [OUTPUT_MD]" >&2
   exit 1
 fi
 
-MANIFEST_YML="$1"
-OUTPUT_MD="${2:-/tmp/reference-repo-manifest-report.md}"
+MANIFEST_YML="$(normalize_path "$1")"
+OUTPUT_MD="$(normalize_path "${2:-/tmp/reference-repo-manifest-report.md}")"
 
 if [[ ! -f "$MANIFEST_YML" ]]; then
   echo "[ERROR] manifest not found: $MANIFEST_YML" >&2
@@ -32,11 +62,13 @@ required_patterns=(
   'scenarios:'
 )
 
+RG_BIN="$(resolve_rg || true)"
+
 has_pattern() {
   local pattern="$1"
   local file="$2"
-  if command -v rg >/dev/null 2>&1; then
-    rg -q "$pattern" "$file"
+  if [[ -n "${RG_BIN:-}" ]]; then
+    "$RG_BIN" -q "$pattern" "$file"
   else
     grep -Eq "$pattern" "$file"
   fi
